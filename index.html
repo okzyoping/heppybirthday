@@ -426,13 +426,31 @@ function resizeFrame() {
 }
 window.addEventListener('resize', resizeFrame);
 
-// Audio autoplay - mencoba memutar saat halaman dimuat
+// ========== AUTOPLAY SAAT SCROLL ATAU SENTUH ==========
 const audio = document.getElementById('bg-music');
+let audioStarted = false;
+
+function tryPlayAudio() {
+    if (audioStarted) return;
+    audio.play().then(() => {
+        audioStarted = true;
+        // Hapus listener setelah berhasil
+        window.removeEventListener('scroll', tryPlayAudio);
+        window.removeEventListener('touchstart', tryPlayAudio);
+        console.log('Audio diputar via scroll/sentuh');
+    }).catch(e => console.log('Gagal memutar audio:', e));
+}
+
+// Coba autoplay saat halaman dimuat (mungkin diblokir)
 window.addEventListener('load', function() {
-    // Browser mungkin tetap memblokir, tapi setidaknya kita mencoba
-    audio.play().catch(e => console.log('Autoplay diblokir oleh browser.'));
+    audio.play().catch(() => {
+        // Jika gagal, pasang listener scroll dan sentuh
+        window.addEventListener('scroll', tryPlayAudio);
+        window.addEventListener('touchstart', tryPlayAudio);
+    });
 });
 
+// Tetap jalankan inisialisasi lainnya
 window.onload = function() {
     resizeFrame();
     createStars();
